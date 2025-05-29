@@ -17,7 +17,7 @@ const flomoApiUrl =
   "https://flomoapp.com/iwh/MTk1NDQwOA/d11c48be63ddbe6fe74d6a0ab2e645ca/";
 const WatermarkPdfArgumentsSchema = z.object({
   inputPath: z.string().default("src/assets/test.pdf"),
-  watermarkText: z.string().default("Confidential"),
+  watermarkText: z.string().default("Confidential222"),
   outputPath: z.string().default("src/assets/test_watermarked.pdf"),
 });
 
@@ -29,7 +29,6 @@ const server = new McpServer(
   },
   {
     capabilities: {
-      resources: {},
       tools: {},
     },
   }
