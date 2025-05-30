@@ -14,13 +14,13 @@ import fs from "fs";
 
 const allowedFolder = process.env.HT_ALLOWED_FOLDER as string;
 // 检查输入和输出路径是否在允许的文件夹内
-const allowedFolderResolved = path.resolve(allowedFolder);
+// const allowedFolderResolved = path.resolve(allowedFolder);
 
-// 找到 在 folder 中的  inputPathResolved 这个文件
-// 检查文件是否存在
-if (!fs.existsSync(allowedFolderResolved)) {
-  throw new Error(`文件夹不存在: ${allowedFolderResolved}`);
-}
+// // 找到 在 folder 中的  inputPathResolved 这个文件
+// // 检查文件是否存在
+// if (!fs.existsSync(allowedFolderResolved)) {
+//   throw new Error(`文件夹不存在: ${allowedFolderResolved}`);
+// }
 const WatermarkPdfArgumentsSchema = z.object({
   needWatermarkFileName: z.string().default(""),
   watermarkText: z.string().default("mcp-server-watermark"),
