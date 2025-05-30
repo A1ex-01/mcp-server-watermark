@@ -26,7 +26,7 @@ server.tool("watermark", "给PDF文件添加水印", { input: WatermarkPdfArgume
         const { input: { needWatermarkFileName, watermarkText }, } = input;
         // 打开 allowedFolder
         if (!allowedFolder) {
-            throw new Error(`未设置允许的文件夹路径${process.env}`);
+            throw new Error(`未设置允许的文件夹路径${JSON.stringify(process.env)}`);
         }
         // 构建完整的文件路径
         const inputPathResolved = path.join(allowedFolder, needWatermarkFileName);
