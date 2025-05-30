@@ -9,16 +9,13 @@ import { readFile, writeFile } from "fs/promises";
 import { PDFDocument, rgb, degrees, StandardFonts } from "pdf-lib";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import path from "path";
+import fs from "fs";
 // Define Zod schemas for validation
-const defaultInputPath =
-  "/Users/a1ex/Desktop/mcp-server/mcp-server-watermark/src/assets/test.pdf";
-const defaultOutputPath =
-  "/Users/a1ex/Desktop/mcp-server/mcp-server-watermark/src/assets/test-watermark.pdf";
 
+const allowedFolder = process.env.allowedFolder;
 const WatermarkPdfArgumentsSchema = z.object({
-  inputPath: z.string().default(defaultInputPath),
-  watermarkText: z.string().default("Confidential222"),
-  outputPath: z.string().default(defaultOutputPath),
+  needWatermarkFileName: z.string().default(""),
+  watermarkText: z.string().default("mcp-server-watermark"),
 });
 
 // Create server instance
@@ -41,49 +38,76 @@ server.tool(
     try {
       //给路径文件打水印
       const {
-        input: { inputPath, outputPath, watermarkText },
+        input: { needWatermarkFileName, watermarkText },
       } = input;
 
-      // 转换为绝对路径
-      const absoluteInputPath = inputPath;
-      const absoluteOutputPath = outputPath;
+      // 打开 allowedFolder
+      if (!allowedFolder) {
+        throw new Error("未设置允许的文件夹路径");
+      }
+      // 构建完整的文件路径
+      const inputPathResolved = path.join(allowedFolder, needWatermarkFileName);
 
+      // 检查文件是否存在
+      if (!fs.existsSync(inputPathResolved)) {
+        throw new Error(`文件不存在: ${needWatermarkFileName}`);
+      }
+
+      // 检查输入和输出路径是否在允许的文件夹内
+      const allowedFolderResolved = path.resolve(allowedFolder);
+
+      // 找到 在 folder 中的  inputPathResolved 这个文件
+      // 检查文件是否存在
+      if (!fs.existsSync(inputPathResolved)) {
+        throw new Error(`文件不存在: ${inputPathResolved}`);
+      }
+
+      // 检查文件是否为PDF
+      if (!inputPathResolved.toLowerCase().endsWith(".pdf")) {
+        throw new Error("只支持PDF文件");
+      }
+
+      // 这个文件打上 watermarkText 的 水印， 存到 该 folder 下， 命名加上 watermarked
       // // 读取PDF文件
-      // const pdfBytes = await readFile(absoluteInputPath);
+      const pdfBytes = await readFile(inputPathResolved);
 
-      // // 加载PDF文档
-      // const pdfDoc = await PDFDocument.load(pdfBytes);
+      // 加载PDF文档
+      const pdfDoc = await PDFDocument.load(pdfBytes);
 
-      // // 获取所有页面
-      // const pages = pdfDoc.getPages();
+      // 获取所有页面
+      const pages = pdfDoc.getPages();
 
-      // // 加载标准字体
-      // const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      // 加载标准字体
+      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      // 为每一页添加水印
+      pages.forEach((page) => {
+        const { width, height } = page.getSize();
 
-      // // 为每一页添加水印
-      // pages.forEach((page) => {
-      //   const { width, height } = page.getSize();
+        // 设置水印文本的样式
+        page.drawText(watermarkText, {
+          x: width / 2 - 100,
+          y: height / 2,
+          size: 50,
+          font: font,
+          color: rgb(0.7, 0.7, 0.7),
+          opacity: 0.3,
+          rotate: degrees(45),
+        });
+      });
 
-      //   // 设置水印文本的样式
-      //   page.drawText(watermarkText, {
-      //     x: width / 2 - 100,
-      //     y: height / 2,
-      //     size: 50,
-      //     font: font,
-      //     color: rgb(0.7, 0.7, 0.7),
-      //     opacity: 0.3,
-      //     rotate: degrees(45),
-      //   });
-      // });
+      // 生成输出文件名
+      const fileName = path.basename(inputPathResolved, ".pdf");
+      const outputFileName = `${fileName}-watermarked.pdf`;
+      const finalOutputPath = path.join(allowedFolderResolved, outputFileName);
 
-      // // 保存修改后的PDF
-      // const modifiedPdfBytes = await pdfDoc.save();
-      // await writeFile(absoluteOutputPath, modifiedPdfBytes);
+      // 保存修改后的PDF
+      const modifiedPdfBytes = await pdfDoc.save();
+      await fs.promises.writeFile(finalOutputPath, modifiedPdfBytes);
       return {
         content: [
           {
             type: "text",
-            text: `水印已成功添加到文件: ${absoluteOutputPath}`,
+            text: `水印已成功添加到文件: ${finalOutputPath}`,
           },
         ],
       };
