@@ -9,7 +9,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
-    "dev": "npx @modelcontextprotocol/inspector node build/index.js"
+    "dev": "npx @modelcontextprotocol/inspector node build/index.js",
+    "start": "node ./build/index.js"
   },
   "files": [
     "build/"
