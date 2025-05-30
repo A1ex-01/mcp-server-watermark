@@ -25,6 +25,9 @@ const server = new McpServer({
 }, {
     capabilities: {
         tools: {},
+        resources: {
+            listChanged: true,
+        },
     },
 });
 server.tool("watermark", "给PDF文件添加水印", { input: WatermarkPdfArgumentsSchema }, async (input) => {
