@@ -12,7 +12,7 @@ import path from "path";
 import fs from "fs";
 // Define Zod schemas for validation
 
-const allowedFolder = process.env.allowedFolder;
+const allowedFolder = process.env.HT_ALLOWED_FOLDER;
 const WatermarkPdfArgumentsSchema = z.object({
   needWatermarkFileName: z.string().default(""),
   watermarkText: z.string().default("mcp-server-watermark"),
