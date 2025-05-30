@@ -45,21 +45,22 @@ server.tool(
       if (!allowedFolder) {
         throw new Error(`未设置允许的文件夹路径${JSON.stringify(process.env)}`);
       }
-      // 构建完整的文件路径
-      const inputPathResolved = path.join(allowedFolder, needWatermarkFileName);
-
-      // 检查文件是否存在
-      if (!fs.existsSync(inputPathResolved)) {
-        throw new Error(`文件不存在: ${needWatermarkFileName}`);
-      }
 
       // 检查输入和输出路径是否在允许的文件夹内
       const allowedFolderResolved = path.resolve(allowedFolder);
 
       // 找到 在 folder 中的  inputPathResolved 这个文件
       // 检查文件是否存在
+      if (!fs.existsSync(allowedFolderResolved)) {
+        throw new Error(`文件夹不存在: ${allowedFolderResolved}`);
+      }
+
+      // 构建完整的文件路径
+      const inputPathResolved = path.join(allowedFolder, needWatermarkFileName);
+
+      // 检查文件是否存在
       if (!fs.existsSync(inputPathResolved)) {
-        throw new Error(`文件不存在: ${inputPathResolved}`);
+        throw new Error(`文件不存在: ${needWatermarkFileName}`);
       }
 
       // 检查文件是否为PDF
