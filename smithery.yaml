@@ -6,7 +6,7 @@ startCommand:
     # JSON Schema defining the configuration options for the MCP.
     type: object
     required:
-      - htAllowed
+      - htAllowedFolder
     properties:
       htAllowedFolder:
         type: string
