@@ -35,7 +35,6 @@ const server = new McpServer(
   {
     capabilities: {
       tools: {},
-      resources: {},
     },
   }
 );
