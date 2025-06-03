@@ -4,15 +4,15 @@ import path from "path";
 import { ColorTypes, degrees, PDFDocument, StandardFonts } from "pdf-lib";
 import { z, ZodRawShape } from "zod";
 import { ToolCallbackEnv } from "../index.js";
-const WatermarkPdfArgumentsSchemaInput = z.object({
-  needWatermarkFileName: z.string().default(""),
+export const WatermarkPdfArgumentsSchemaInput = z.object({
+  needWatermarkUrl: z.string().default(""),
   watermarkText: z.string().default("mcp-server-watermark"),
 });
-
-const toolCallbackFn = async (
+// 通过本地目录，读取本地目录的文件，对本地目录中的某一PDF文件添加水印
+export const toolCallbackFn = async (
   input: {
     input: {
-      needWatermarkFileName: string;
+      needWatermarkUrl: string;
       watermarkText: string;
     };
   },
@@ -22,7 +22,7 @@ const toolCallbackFn = async (
   try {
     //给路径文件打水印
     const {
-      input: { needWatermarkFileName, watermarkText },
+      input: { needWatermarkUrl, watermarkText },
     } = input;
 
     // 打开 allowedFolder
@@ -39,22 +39,29 @@ const toolCallbackFn = async (
       throw new Error(`文件夹不存在: ${allowedFolderResolved}`);
     }
 
-    // 构建完整的文件路径
-    const inputPathResolved = path.join(allowedFolder, needWatermarkFileName);
-
-    // 检查文件是否存在
-    if (!existsSync(inputPathResolved)) {
-      throw new Error(`文件不存在: ${needWatermarkFileName}`);
+    // 获取线上文件
+    // 从URL下载PDF文件
+    const response = await fetch(needWatermarkUrl);
+    if (!response.ok) {
+      throw new Error(`下载文件失败: ${response.statusText}`);
     }
 
-    // 检查文件是否为PDF
-    if (!inputPathResolved.toLowerCase().endsWith(".pdf")) {
-      throw new Error("只支持PDF文件");
+    // 获取文件名
+    const contentDisposition = response.headers.get("content-disposition");
+    let fileName = "downloaded.pdf";
+    if (contentDisposition) {
+      const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(
+        contentDisposition
+      );
+      if (matches != null && matches[1]) {
+        fileName = matches[1].replace(/['"]/g, "");
+      }
     }
 
-    // 这个文件打上 watermarkText 的 水印， 存到 该 folder 下， 命名加上 watermarked
-    // // 读取PDF文件
-    const pdfBytes = await readFileSync(inputPathResolved);
+    // 将文件保存到本地
+    const pdfBytes = await response.arrayBuffer();
+    const inputPathResolved = path.join(allowedFolderResolved, fileName);
+    // await writeFileSync(inputPathResolved, Buffer.from(pdfBytes));
 
     // 加载PDF文档
     const pdfDoc = await PDFDocument.load(pdfBytes);
@@ -81,8 +88,8 @@ const toolCallbackFn = async (
     });
 
     // 生成输出文件名
-    const fileName = path.basename(inputPathResolved, ".pdf");
-    const outputFileName = `${fileName}-watermarked.pdf`;
+    const localFileName = path.basename(inputPathResolved, ".pdf");
+    const outputFileName = `${localFileName}-watermarked.pdf`;
     const finalOutputPath = path.join(allowedFolderResolved, outputFileName);
 
     // 保存修改后的PDF

@@ -1,19 +1,10 @@
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { toolCallbackFn } from "./tools/watermark-by-local.js";
+// @ts-ignore
+import watermarkByLocal from "./tools/watermark-by-local.js";
+// @ts-ignore
+import watermarkByOnline from "./tools/watermark-by-online.js";
 const allowedFolder = process.env.HT_ALLOWED_FOLDER;
-// 检查输入和输出路径是否在允许的文件夹内
-// const allowedFolderResolved = path.resolve(allowedFolder);
-// // 找到 在 folder 中的  inputPathResolved 这个文件
-// // 检查文件是否存在
-// if (!fs.existsSync(allowedFolderResolved)) {
-//   throw new Error(`文件夹不存在: ${allowedFolderResolved}`);
-// }
-const WatermarkPdfArgumentsSchema = z.object({
-    needWatermarkFileName: z.string().default(""),
-    watermarkText: z.string().default("mcp-server-watermark"),
-});
 // Create server instance
 const server = new McpServer({
     name: "mcp-server-watermark",
@@ -24,8 +15,14 @@ const server = new McpServer({
     },
 });
 // @ts-ignore
-server.tool("watermark", "给PDF文件添加水印", { input: WatermarkPdfArgumentsSchema }, async (input) => {
-    return await toolCallbackFn(input, {
+server.tool("watermark-local", "通过本地目录，读取本地目录的文件，对本地目录中的某一PDF文件添加水印", { input: watermarkByLocal.WatermarkPdfArgumentsSchemaInput }, async (input) => {
+    return await watermarkByLocal.toolCallbackFn(input, {
+        allowedFolder: allowedFolder,
+    });
+});
+// @ts-ignore
+server.tool("watermark-online", "通过本地目录，读取在线文件地址，对在线文件地址的PDF文件添加水印，保存到本地目录", { input: watermarkByOnline.WatermarkPdfArgumentsSchemaInput }, async (input) => {
+    return await watermarkByOnline.toolCallbackFn(input, {
         allowedFolder: allowedFolder,
     });
 });
