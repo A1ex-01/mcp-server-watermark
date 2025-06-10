@@ -4,6 +4,7 @@ import path from "path";
 import { ColorTypes, degrees, PDFDocument, StandardFonts } from "pdf-lib";
 import { z, ZodRawShape } from "zod";
 import { ToolCallbackEnv } from "../index.js";
+import { doWatermarkPDF } from "../utils/base.js";
 const WatermarkPdfArgumentsSchemaInput = z.object({
   needWatermarkFilePath: z.string().default(""),
   watermarkText: z.string().default("mcp-server-watermark"),
@@ -57,29 +58,8 @@ const toolCallbackFn = async (
     // 这个文件打上 watermarkText 的 水印， 存到 该 folder 下， 命名加上 watermarked
     // // 读取PDF文件
     const pdfBytes = await readFileSync(inputPathResolved);
-
-    // 加载PDF文档
-    const pdfDoc = await PDFDocument.load(pdfBytes);
-
-    // 获取所有页面
-    const pages = pdfDoc.getPages();
-
-    // 加载标准字体
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    // 为每一页添加水印
-    pages.forEach((page) => {
-      const { width, height } = page.getSize();
-
-      // 设置水印文本的样式
-      page.drawText(watermarkText, {
-        x: width / 2 - 100,
-        y: height / 2,
-        size: 50,
-        font: font,
-        color: { type: ColorTypes.RGB, red: 0.7, green: 0.7, blue: 0.7 },
-        opacity: 0.3,
-        rotate: degrees(45),
-      });
+    const modifiedPdfBytes = await doWatermarkPDF(pdfBytes, {
+      watermarkText: watermarkText,
     });
 
     // 生成输出文件名
@@ -90,7 +70,6 @@ const toolCallbackFn = async (
     const finalOutputPath = path.join(allowedFolderResolved, outputFileName);
 
     // 保存修改后的PDF
-    const modifiedPdfBytes = await pdfDoc.save();
     await writeFileSync(finalOutputPath, modifiedPdfBytes);
     return {
       _meta: {},
