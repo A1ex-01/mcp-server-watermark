@@ -1,10 +1,7 @@
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-// @ts-ignore
-import watermarkByLocal from "./tools/watermark-by-local.js";
-// @ts-ignore
-import watermarkByOnline from "./tools/watermark-by-online.js";
-const allowedFolder = process.env.HT_ALLOWED_FOLDER;
+import watermarkLinkToLink from "./tools/watermark-link-to-link.js";
+// const allowedFolder = process.env.HT_ALLOWED_FOLDER as string;
 // Create server instance
 const server = new McpServer({
     name: "mcp-server-watermark",
@@ -14,17 +11,30 @@ const server = new McpServer({
         tools: {},
     },
 });
+// // @ts-ignore
+// server.tool(
+//   "watermark-local",
+//   "通过本地目录，读取本地目录的文件，对本地目录中的某一PDF文件添加水印",
+//   { input: watermarkByLocal.WatermarkPdfArgumentsSchemaInput },
+//   async (input) => {
+//     return await watermarkByLocal.toolCallbackFn(input, {
+//       allowedFolder: allowedFolder,
+//     });
+//   }
+// );
 // @ts-ignore
-server.tool("watermark-local", "通过本地目录，读取本地目录的文件，对本地目录中的某一PDF文件添加水印", { input: watermarkByLocal.WatermarkPdfArgumentsSchemaInput }, async (input) => {
-    return await watermarkByLocal.toolCallbackFn(input, {
-        allowedFolder: allowedFolder,
-    });
-});
-// @ts-ignore
-server.tool("watermark-online", "通过本地目录，读取在线文件地址，对在线文件地址的PDF文件添加水印，保存到本地目录", { input: watermarkByOnline.WatermarkPdfArgumentsSchemaInput }, async (input) => {
-    return await watermarkByOnline.toolCallbackFn(input, {
-        allowedFolder: allowedFolder,
-    });
+// server.tool(
+//   "watermark-online",
+//   "通过本地目录，读取在线文件地址，对在线文件地址的PDF文件添加水印，保存到本地目录",
+//   { input: watermarkByOnline.WatermarkPdfArgumentsSchemaInput },
+//   async (input) => {
+//     return await watermarkByOnline.toolCallbackFn(input, {
+//       // allowedFolder: allowedFolder,
+//     });
+//   }
+// );
+server.tool("watermark-link-to-link", "通过本地目录，读取在线文件地址，对在线文件地址的PDF文件添加水印，保存到本地目录", { input: watermarkLinkToLink.WatermarkPdfArgumentsSchemaInput }, async (input) => {
+    return await watermarkLinkToLink.toolCallbackFn(input);
 });
 // Start the server
 async function main() {
