@@ -5,15 +5,17 @@ import { ColorTypes, degrees, PDFDocument, StandardFonts } from "pdf-lib";
 import { z, ZodRawShape } from "zod";
 import { ToolCallbackEnv } from "../index.js";
 const WatermarkPdfArgumentsSchemaInput = z.object({
-  needWatermarkFileName: z.string().default(""),
+  needWatermarkFilePath: z.string().default(""),
   watermarkText: z.string().default("mcp-server-watermark"),
+  exportFileName: z.string().default(""),
 });
 
 const toolCallbackFn = async (
   input: {
     input: {
-      needWatermarkFileName: string;
+      needWatermarkFilePath: string;
       watermarkText: string;
+      exportFileName: string;
     };
   },
   env: ToolCallbackEnv
@@ -22,7 +24,7 @@ const toolCallbackFn = async (
   try {
     //给路径文件打水印
     const {
-      input: { needWatermarkFileName, watermarkText },
+      input: { needWatermarkFilePath, watermarkText, exportFileName },
     } = input;
 
     // 打开 allowedFolder
@@ -40,11 +42,11 @@ const toolCallbackFn = async (
     }
 
     // 构建完整的文件路径
-    const inputPathResolved = path.join(allowedFolder, needWatermarkFileName);
+    const inputPathResolved = path.join(allowedFolder, needWatermarkFilePath);
 
     // 检查文件是否存在
     if (!existsSync(inputPathResolved)) {
-      throw new Error(`文件不存在: ${needWatermarkFileName}`);
+      throw new Error(`文件不存在: ${needWatermarkFilePath}`);
     }
 
     // 检查文件是否为PDF
@@ -82,7 +84,9 @@ const toolCallbackFn = async (
 
     // 生成输出文件名
     const fileName = path.basename(inputPathResolved, ".pdf");
-    const outputFileName = `${fileName}-watermarked.pdf`;
+    const fileFolder = path.dirname(needWatermarkFilePath);
+    const endName = exportFileName ? exportFileName : `${fileName}-watermarked`;
+    const outputFileName = `${fileFolder}/${endName}.pdf`;
     const finalOutputPath = path.join(allowedFolderResolved, outputFileName);
 
     // 保存修改后的PDF

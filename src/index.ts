@@ -3,12 +3,13 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 // @ts-ignore
 import watermarkByOnline from "./tools/watermark-by-online.js";
 import watermarkLinkToLink from "./tools/watermark-link-to-link.js";
-
+import watermarkByLocal from "./tools/watermark-by-local.js";
+import scanFolder from "./tools/scan-folder.js";
 export interface ToolCallbackEnv {
   allowedFolder: string;
 }
 
-// const allowedFolder = process.env.HT_ALLOWED_FOLDER as string;
+const allowedFolder = process.env.HT_ALLOWED_FOLDER as string;
 
 // Create server instance
 const server = new McpServer(
@@ -22,17 +23,29 @@ const server = new McpServer(
     },
   }
 );
-// // @ts-ignore
-// server.tool(
-//   "watermark-local",
-//   "通过本地目录，读取本地目录的文件，对本地目录中的某一PDF文件添加水印",
-//   { input: watermarkByLocal.WatermarkPdfArgumentsSchemaInput },
-//   async (input) => {
-//     return await watermarkByLocal.toolCallbackFn(input, {
-//       allowedFolder: allowedFolder,
-//     });
-//   }
-// );
+// @ts-ignore
+server.tool(
+  "scan-folder",
+  "通过设置的folder，扫描指定目录下的PDF文件，并返回PDF文件列表",
+  { input: scanFolder.ScanFolderArgumentsSchemaInput },
+  async (input) => {
+    return await scanFolder.toolCallbackFn({
+      allowedFolder: allowedFolder,
+    });
+  }
+);
+
+// @ts-ignore
+server.tool(
+  "watermark-local",
+  "对本地目录中的某一PDF文件添加水印",
+  { input: watermarkByLocal.WatermarkPdfArgumentsSchemaInput },
+  async (input) => {
+    return await watermarkByLocal.toolCallbackFn(input, {
+      allowedFolder: allowedFolder,
+    });
+  }
+);
 
 // @ts-ignore
 // server.tool(
@@ -48,7 +61,7 @@ const server = new McpServer(
 
 server.tool(
   "watermark-link-to-link",
-  "通过本地目录，读取在线文件地址，对在线文件地址的PDF文件添加水印，保存到本地目录",
+  "读取在线文件地址，对在线文件地址的PDF文件添加水印，保存成在线地址",
   { input: watermarkLinkToLink.WatermarkPdfArgumentsSchemaInput },
   async (input) => {
     return await watermarkLinkToLink.toolCallbackFn(input);

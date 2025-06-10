@@ -3,14 +3,15 @@ import path from "path";
 import { ColorTypes, degrees, PDFDocument, StandardFonts } from "pdf-lib";
 import { z } from "zod";
 const WatermarkPdfArgumentsSchemaInput = z.object({
-    needWatermarkFileName: z.string().default(""),
+    needWatermarkFilePath: z.string().default(""),
     watermarkText: z.string().default("mcp-server-watermark"),
+    exportFileName: z.string().default(""),
 });
 const toolCallbackFn = async (input, env) => {
     const { allowedFolder } = env;
     try {
         //给路径文件打水印
-        const { input: { needWatermarkFileName, watermarkText }, } = input;
+        const { input: { needWatermarkFilePath, watermarkText, exportFileName }, } = input;
         // 打开 allowedFolder
         if (!allowedFolder) {
             throw new Error(`未设置允许的文件夹路径${JSON.stringify(process.env)}`);
@@ -23,10 +24,10 @@ const toolCallbackFn = async (input, env) => {
             throw new Error(`文件夹不存在: ${allowedFolderResolved}`);
         }
         // 构建完整的文件路径
-        const inputPathResolved = path.join(allowedFolder, needWatermarkFileName);
+        const inputPathResolved = path.join(allowedFolder, needWatermarkFilePath);
         // 检查文件是否存在
         if (!existsSync(inputPathResolved)) {
-            throw new Error(`文件不存在: ${needWatermarkFileName}`);
+            throw new Error(`文件不存在: ${needWatermarkFilePath}`);
         }
         // 检查文件是否为PDF
         if (!inputPathResolved.toLowerCase().endsWith(".pdf")) {
@@ -57,7 +58,9 @@ const toolCallbackFn = async (input, env) => {
         });
         // 生成输出文件名
         const fileName = path.basename(inputPathResolved, ".pdf");
-        const outputFileName = `${fileName}-watermarked.pdf`;
+        const fileFolder = path.dirname(needWatermarkFilePath);
+        const endName = exportFileName ? exportFileName : `${fileName}-watermarked`;
+        const outputFileName = `${fileFolder}/${endName}.pdf`;
         const finalOutputPath = path.join(allowedFolderResolved, outputFileName);
         // 保存修改后的PDF
         const modifiedPdfBytes = await pdfDoc.save();
