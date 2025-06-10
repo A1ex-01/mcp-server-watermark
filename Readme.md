@@ -1,0 +1,6 @@
+- env
+  - allowedFolder
+- tools
+  - scan-folder
+  - watermark-local
+  - watermark-link-to-link
